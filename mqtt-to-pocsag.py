@@ -1,4 +1,4 @@
-#!/root/.venv/bin/python3
+#!/home/user/.venv/bin/python3
 
 import paho.mqtt.client as mqtt
 import requests
@@ -16,7 +16,7 @@ from meshtastic import (
 )  # Import from meshtastic
 
 # Define your encryption key here
-key = "1PG7OiApB1nwvP+rz05pAQ=="  # Replace with your actual key , This is the key for AQ== in long form
+key = "1PG7OiApB1nwvP+rz05pAQ=="  # Replace with your actual key , This is the key for AQ== in LongFast
 padded_key = key.ljust(len(key) + ((4 - (len(key) % 4)) % 4), "=")
 replaced_key = padded_key.replace("-", "+").replace("_", "/")
 key = replaced_key
