@@ -103,7 +103,7 @@ LOG_LEVEL=INFO
 ### Running the Application
 
 ```
-python3 meshtastic_listener_env.py
+python3 mqtt-to-pocsag.py
 ```
 
 ### Stopping the Application
@@ -302,27 +302,11 @@ signal.signal(signal.SIGTERM, signal_handler)
 | Encryption Error | Decryption failure | Skip message, continue | ERROR |
 | Resource Exhaustion | System monitoring | Cleanup and recovery | CRITICAL |
 
-## Testing
 
-### Configuration Testing
-
-Test your configuration before running:
-```
-python3 test_env_config.py
-```
-
-Test Coverage:
-- Environment variable loading
-- Configuration validation  
-- Encryption key format verification
-- Database connectivity
-- Numeric value conversion
-
-### Manual Testing
 
 1. Start the application
    ```
-   python3 meshtastic_listener_env.py
+   python3 mqtt-to-pocsag.py
    ```
 
 2. Monitor logs
@@ -436,7 +420,6 @@ grep "Configuration Summary" -A 10 meshtastic_debug.log
 
 ```
 meshtastic-mqtt-listener/
-├── meshtastic_listener_env.py    # Main application (enhanced version)
 ├── .env.example                  # Configuration template
 ├── .env                         # Your configuration (not in git)
 ├── .gitignore                   # Git ignore rules
@@ -457,10 +440,6 @@ meshtastic-mqtt-listener/
    python3 -m venv venv
    source venv/bin/activate
    pip install -r requirements.txt
-   ```
-3. Run tests
-   ```
-   python3 test_env_config.py
    ```
 
 ### Code Standards
