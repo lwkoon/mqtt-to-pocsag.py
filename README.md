@@ -528,6 +528,7 @@ ls -lh meshtastic_debug.log
 ```
 
 Note: This application is designed for amateur radio use. Ensure compliance with your local amateur radio regulations and licensing requirements.
+*** The application now behaves exactly as requested: immediate shutdown on Ctrl+C and automatic log file rotation at 10MB!
 
 Last updated: January 2025
 Version: 2.0 Enhanced
