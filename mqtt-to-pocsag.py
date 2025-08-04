@@ -358,7 +358,7 @@ def create_node_id(node_number):
         return "!error"
 
 def on_connect(client, userdata, flags, rc, properties=None):
-    """Enhanced MQTT connection callback"""
+    """Enhanced MQTT connection callback - compatible with both v1 and v2 API"""
     try:
         if rc == 0:
             logging.info(f"Successfully connected to MQTT broker: {CONFIG['mqtt_broker']}")
@@ -386,11 +386,14 @@ def on_connect(client, userdata, flags, rc, properties=None):
     except Exception as e:
         logging.error(f"Error in on_connect callback: {e}")
 
-def on_disconnect(client, userdata, rc):
-    """Enhanced MQTT disconnection callback"""
+def on_disconnect(client, userdata, rc, properties=None, reasonCode=None):
+    """Enhanced MQTT disconnection callback - compatible with both v1 and v2 API"""
     try:
+        # Handle both old and new callback signatures
         if rc != 0:
             logging.warning(f"Unexpected MQTT disconnection. Reason code: {rc}")
+            if reasonCode is not None:
+                logging.warning(f"Disconnect reason: {reasonCode}")
         else:
             logging.info("MQTT disconnected gracefully")
     except Exception as e:
@@ -443,7 +446,7 @@ def setup_mqtt_client():
     try:
         logging.info("Setting up MQTT client...")
         
-        # Create client
+        # Create client with callback API version 2 for better compatibility
         mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         
         # Set credentials
@@ -646,4 +649,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
