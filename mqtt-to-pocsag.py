@@ -31,10 +31,31 @@ shutdown_event = threading.Event()
 mqtt_client = None
 db_connection = None
 
+def check_and_rotate_log(log_file_path, max_size_mb=10):
+    """Check log file size and rotate if it exceeds max_size_mb"""
+    try:
+        if os.path.exists(log_file_path):
+            file_size_mb = os.path.getsize(log_file_path) / (1024 * 1024)
+            if file_size_mb >= max_size_mb:
+                # Clear the log file by truncating it
+                with open(log_file_path, 'w') as f:
+                    f.write("")
+                print(f"Log file rotated: {log_file_path} (was {file_size_mb:.2f}MB)")
+                return True
+        return False
+    except Exception as e:
+        print(f"Error checking/rotating log file: {e}")
+        return False
+
 # Configure logging with rotation and console output
 def setup_logging():
     """Setup comprehensive logging with both file and console output"""
     try:
+        log_file = os.getenv('LOG_FILE', 'meshtastic_debug.log')
+        
+        # Check and rotate log file if needed
+        check_and_rotate_log(log_file, max_size_mb=10)
+        
         # Create logger
         logger = logging.getLogger()
         logger.setLevel(logging.DEBUG)
@@ -42,8 +63,7 @@ def setup_logging():
         # Clear any existing handlers
         logger.handlers.clear()
         
-        # File handler with rotation
-        log_file = os.getenv('LOG_FILE', 'meshtastic_debug.log')
+        # File handler
         file_handler = logging.FileHandler(log_file, mode="a")
         file_handler.setLevel(logging.DEBUG)
         
@@ -67,6 +87,20 @@ def setup_logging():
     except Exception as e:
         print(f"CRITICAL: Failed to setup logging: {e}")
         return False
+
+def periodic_log_check():
+    """Periodically check and rotate log file if needed"""
+    log_file = os.getenv('LOG_FILE', 'meshtastic_debug.log')
+    while not shutdown_event.is_set():
+        try:
+            if check_and_rotate_log(log_file, max_size_mb=10):
+                # Re-setup logging after rotation
+                setup_logging()
+                logging.info("Log file was rotated and logging reinitialized")
+            time.sleep(60)  # Check every minute
+        except Exception as e:
+            print(f"Error in periodic log check: {e}")
+            time.sleep(60)
 
 # Initialize logging first
 if not setup_logging():
@@ -324,8 +358,8 @@ def send_to_dapnet_pocsag(text_payload, client_id, max_retries=None):
                 timeout=CONFIG["api_timeout"]
             )
             
-            if response.status_code == 200:
-                logging.info("Message sent to DAPNET successfully")
+            if response.status_code in [200, 201]:
+                logging.info(f"Message sent to DAPNET successfully (status: {response.status_code})")
                 return True
             else:
                 logging.warning(f"DAPNET API returned status {response.status_code}: {response.text}")
@@ -504,9 +538,14 @@ def connect_mqtt_with_retry():
     return False
 
 def signal_handler(signum, frame):
-    """Handle shutdown signals gracefully"""
-    logging.info(f"Received signal {signum}, initiating graceful shutdown...")
-    shutdown_event.set()
+    """Handle shutdown signals - IMMEDIATE EXIT for SIGINT (Ctrl+C)"""
+    if signum == signal.SIGINT:
+        print("\nCtrl+C pressed - Shutting down immediately!")
+        logging.info("SIGINT received - Immediate shutdown")
+        os._exit(0)  # Immediate exit without cleanup
+    else:
+        logging.info(f"Received signal {signum}, initiating graceful shutdown...")
+        shutdown_event.set()
 
 def cleanup_resources():
     """Clean up resources before exit"""
@@ -547,6 +586,10 @@ def main_loop():
         # Start MQTT loop in background
         mqtt_client.loop_start()
         
+        # Start periodic log check in background
+        log_check_thread = threading.Thread(target=periodic_log_check, daemon=True)
+        log_check_thread.start()
+        
         # Main monitoring loop
         while not shutdown_event.is_set():
             try:
@@ -561,6 +604,7 @@ def main_loop():
                 time.sleep(10)
                 
             except KeyboardInterrupt:
+                # This should not be reached due to signal handler, but just in case
                 logging.info("Keyboard interrupt received")
                 break
             except Exception as e:
@@ -594,11 +638,12 @@ def main():
     global encryption_key
     
     try:
-        # Setup signal handlers
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
+        # Setup signal handlers - IMMEDIATE EXIT for Ctrl+C
+        signal.signal(signal.SIGINT, signal_handler)   # Ctrl+C - immediate exit
+        signal.signal(signal.SIGTERM, signal_handler)  # Graceful for SIGTERM
         
         logging.info("Starting application initialization...")
+        logging.info("Press Ctrl+C for immediate shutdown")
         
         # Check if .env file exists
         if os.path.exists('.env'):
@@ -634,12 +679,13 @@ def main():
             sys.exit(1)
         
         logging.info("Initialization completed successfully")
-        logging.info("Application is now running. Press Ctrl+C to stop.")
+        logging.info("Application is now running. Press Ctrl+C for immediate stop.")
         
         # Start main loop
         main_loop()
         
     except KeyboardInterrupt:
+        # This should not be reached due to signal handler
         logging.info("Application interrupted by user")
     except Exception as e:
         logging.critical(f"Critical application error: {e}")
