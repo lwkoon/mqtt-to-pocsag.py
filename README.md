@@ -420,14 +420,13 @@ grep "Configuration Summary" -A 10 meshtastic_debug.log
 
 ```
 meshtastic-mqtt-listener/
-├── .env.example                  # Configuration template
+├── .env.example                 # Configuration template
 ├── .env                         # Your configuration (not in git)
 ├── .gitignore                   # Git ignore rules
 ├── requirements.txt             # Python dependencies
 ├── README.md                    # This comprehensive documentation
-├── test_env_config.py          # Configuration test script
-└── logs/
-    └── meshtastic_debug.log     # Application logs
+├── test_env_config.py           # Configuration test script
+└── meshtastic_debug.log         # Application logs
 ```
 
 ## Contributing
