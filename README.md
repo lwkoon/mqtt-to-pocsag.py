@@ -425,7 +425,6 @@ meshtastic-mqtt-listener/
 ├── .gitignore                   # Git ignore rules
 ├── requirements.txt             # Python dependencies
 ├── README.md                    # This comprehensive documentation
-├── test_env_config.py           # Configuration test script
 └── meshtastic_debug.log         # Application logs
 ```
 
