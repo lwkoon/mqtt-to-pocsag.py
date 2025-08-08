@@ -42,7 +42,7 @@ A robust, production-ready Python application that listens to Meshtastic MQTT me
 1. Clone the repository
    ```
    git clone <your-repository-url>
-   cd meshtastic-mqtt-listener
+   cd mqtt-to-pocsag
    ```
 
 2. Install dependencies
@@ -53,7 +53,7 @@ A robust, production-ready Python application that listens to Meshtastic MQTT me
 3. Configure environment variables
    ```
    cp .env.example .env
-   nano .env
+   vi .env
    ```
 
 ## Configuration
